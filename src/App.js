@@ -21,9 +21,10 @@ export default function App() {
       try {
          const response = await api.get('repositories');
 
+         console.log(response.data);
          setRepositories(response.data);
       } catch (err) {
-
+          console.log('Error to load repositories');
       }
     }
 
@@ -31,7 +32,17 @@ export default function App() {
   }, [])
 
   async function handleLikeRepository(id) {
-    // Implement "Like Repository" functionality
+      try {
+        console.log(`repositories/${id}/like`);
+        const response = await api.post(`repositories/${id}/like`);
+
+        //find the index of object from array that you want to update
+        const repositoryIndex = repositories.findIndex(repository => repository.id === id);
+        // make final new array of objects by combining updated object.
+        setRepositories([...repositories.slice(0, repositoryIndex), response.data,...repositories.slice(repositoryIndex + 1)]);
+      } catch (err) {
+          console.log('Error to like repository')
+      }
   }
 
   return (
@@ -43,35 +54,34 @@ export default function App() {
           data={repositories}
           keyExtractor={repository => repository.id}
           renderItem={({ item: repository }) => (
-              <View>
-                  <Text key={repository.id} style={styles.repository}>{repository.title}</Text>
-                  <View style={styles.techsContainer}>
-                    <Text style={styles.tech}>
-                      ReactJS
-                    </Text>
-                    <Text style={styles.tech}>
-                      Node.js
-                    </Text>
-                  </View>
+            <View>
+                <Text key={repository.id} style={styles.repository}>{repository.title}</Text>
 
-                  <View style={styles.likesContainer}>
-                    <Text
-                      style={styles.likeText}
-                      testID={`repository-likes-${repository.id}`}
-                    >
-                      {repository.likes} curtida
-                    </Text>
-                  </View>
+                <View style={styles.techsContainer}>
+                   {repository.techs.map((tech, index) => (
+                      <Text key={index} style={styles.tech}>
+                        {tech}
+                      </Text>
+                   ))}
+                </View>
 
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => handleLikeRepository(1)}
-                    testID={`like-button-${repository.id}`}
+                <View style={styles.likesContainer}>
+                  <Text
+                    style={styles.likeText}
+                    testID={`repository-likes-${repository.id}`}
                   >
-                    <Text style={styles.buttonText}>Curtir</Text>
-                  </TouchableOpacity>
-                )}          
-              </View>
+                    {repository.likes} {repository.likes === 0 ? 'curtida' : 'curtidas'}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={() => handleLikeRepository(repository.id)}
+                  testID={`like-button-${repository.id}`}
+                >
+                  <Text style={styles.buttonText}>Curtir</Text>
+                </TouchableOpacity>
+            </View>
           )}
         />        
       </SafeAreaView>
